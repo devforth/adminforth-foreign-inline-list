@@ -41,6 +41,15 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
         }
 
         const { allowedActions } = await interpretResource(adminUser, resourceCopy, {}, ActionCheckSource.DisplayButtons, this.adminforth);
+        // if inline table has create action
+        // check if foreign resource allows for its corresponding foreign resource column to be set on create
+        if (allowedActions.create) {
+          for (const column of resource.columns) {
+            if (column.foreignResource?.resourceId === this.resourceConfig.resourceId && !column.showIn.create) {
+              return { error: `Resource ${this.options.foreignResourceId} column ${column.name} should be editable on create page for inline list in ${this.resourceConfig.resourceId} resource to work` };
+            }
+          } 
+        }
 
         return { 
           resource: { 
