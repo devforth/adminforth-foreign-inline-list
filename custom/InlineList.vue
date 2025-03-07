@@ -2,8 +2,8 @@
   <Teleport to="body">
     <!-- todo exclude foreign column-->
     <Filters
-      v-if="listResource"
-      :columns="listResource.columns.filter((c) => c.name !== listResourceRefColumn.name)"
+      v-if="filterableColumns.length"
+      :columns="filterableColumns"
       v-model:filters="filters"
       :columnsMinMax="columnsMinMax"
       :show="filtersShow"
@@ -70,7 +70,7 @@
         {{ `${action.label} (${checkboxes.length})` }}
       </button>
 
-      <RouterLink v-if="listResource?.options?.allowedActions?.create"
+      <RouterLink v-if="createIsAllowed"
         :to="{ 
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
@@ -129,7 +129,7 @@ import {
   IconFilterOutline,
   IconPlusOutline,
 } from '@iconify-prerendered/vue-flowbite';
-import { showErrorTost } from '@/composables/useFrontendApi';
+import { showErrorTost, showWarningTost } from '@/composables/useFrontendApi';
 import { getIcon } from '@/utils';
 
 const props = defineProps(['column', 'record', 'meta', 'resource', 'adminUser']);
@@ -153,11 +153,23 @@ const listResourceRefColumn = computed(() => {
   if (!listResource.value) {
     return null;
   }
-  return listResource.value.columns.find(c => c.foreignResource?.resourceId === props.resource.resourceId);
+  return listResource.value.columns.find(c => c.foreignResource?.polymorphicResources
+    ? c.foreignResource.polymorphicResources.find((pr) => pr.resourceId === props.resource.resourceId)
+    : c.foreignResource?.resourceId === props.resource.resourceId);
 });
 
 const selfPrimaryKeyColumn = computed(() => {
   return props.resource.columns.find(c => c.primaryKey);
+});
+
+const filterableColumns = computed(() => {
+  if (!listResource.value) {
+    return [];
+  }
+
+  const refColumn = listResourceRefColumn.value;
+  return listResource.value.columns.filter((c) => c.name !== refColumn.name
+    && (refColumn.foreignResource.polymorphicOn ? c.name !== refColumn.foreignResource.polymorphicOn : true));
 });
 
 const endFilters = computed(() => {
@@ -181,6 +193,17 @@ const endFilters = computed(() => {
       value: props.record[primaryKeyColumn.name],
     },
   ];
+});
+
+const createIsAllowed = computed(() => {
+  if (!listResource.value?.options?.allowedActions?.create) {
+    return false;
+  }
+
+  if (listResourceRefColumn.value && !listResourceRefColumn.value.showIn.create) {
+    return false;
+  }
+  return true;
 });
 
 watch([page], async () => {
@@ -277,6 +300,11 @@ onMounted( async () => {
       method: 'POST',
       body: {},
   })).resource;
+
+  if (listResource.value?.options?.allowedActions?.create && listResourceRefColumn.value && !listResourceRefColumn.value.showIn.create) {
+    showWarningTost(`Resource '${listResource.value.resourceId}' column '${listResourceRefColumn.value.name}' should be editable on create page for 'create' action to be enabled`, 10000);
+  }
+  
   columnsMinMax.value = await callAdminForthApi({
     path: '/get_min_max_for_columns',
     method: 'POST',
