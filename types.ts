@@ -19,4 +19,14 @@ export type PluginOptions = {
    * @param resourceConfig - Resource config of the table.
    */
   modifyTableResourceConfig?: (resourceConfig: AdminForthResource) => void;
+
+  /**
+   * Place the component in a specific group.
+   * 
+   * @param group - Group to place the component in.
+   */
+  placeInGroup?: {
+    name: string;
+    position: number;
+  };
 }

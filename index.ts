@@ -1,4 +1,3 @@
-
 import type { 
   AdminForthResource, 
   IAdminForth,
@@ -111,7 +110,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
-    resourceConfig.columns.push({
+    const newColumn = {
       name: `foreignInlineList_${this.foreignResource.resourceId}`,
       label: 'Foreign Inline List',
       virtual: true,
@@ -131,6 +130,28 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           }
         }
       },
-    });
+    };
+
+    if (this.options.placeInGroup?.name) {
+      const targetGroup = resourceConfig.options?.fieldGroups?.find(
+        group => group.groupName === this.options.placeInGroup?.name
+      );
+      
+      if (!targetGroup) {
+        throw new Error(`ForeignInlineListPlugin: Group "${this.options.placeInGroup?.name}" not found`);
+      }
+      if (this.options.placeInGroup.position < 0 || this.options.placeInGroup.position > targetGroup.columns.length) {
+        throw new Error(`ForeignInlineListPlugin: Invalid position ${this.options.placeInGroup?.position}. Must be between 0 and ${targetGroup.columns.length} for group "${this.options.placeInGroup?.name}"`);
+      }
+
+      const beforeColumnName = targetGroup.columns[this.options.placeInGroup.position - 1];
+      const beforeColumnIndex = resourceConfig.columns.findIndex(
+        col => col.name === beforeColumnName
+      );
+      targetGroup.columns.splice(this.options.placeInGroup.position, 0, newColumn.name);
+      resourceConfig.columns.splice(beforeColumnIndex + 1, 0, newColumn);
+    } else {
+      resourceConfig.columns.push(newColumn);
+    }
   }
 }
