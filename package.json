@@ -1,6 +1,6 @@
 {
   "name": "@adminforth/foreign-inline-list",
-  "version": "1.0.27", 
+  "version": "1.0.27",
   "description": "AdminForth plugin for adding list of children items to the parent item show page",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,7 +8,7 @@
   "homepage": "https://adminforth.dev/docs/tutorial/Plugins/ForeignInlineList/",
   "scripts": {
     "build": "tsc && rsync -av --exclude 'node_modules' custom dist/",
-    "prepare": "npm link adminforth" 
+    "prepare": "npm link adminforth"
   },
   "repository": {
     "type": "git",
@@ -49,5 +49,8 @@
         "prerelease": true
       }
     ]
+  },
+  "dependencies": {
+    "clone": "^2.1.2"
   }
 }

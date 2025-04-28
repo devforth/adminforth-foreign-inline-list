@@ -69,13 +69,13 @@
 
         {{ `${action.label} (${checkboxes.length})` }}
       </button>
-
       <RouterLink v-if="createIsAllowed"
         :to="{ 
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
           query: { 
             values: encodeURIComponent(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
+            readonlyColumns: encodeURIComponent(JSON.stringify([listResourceRefColumn.name])),
             returnTo: $route.fullPath,
           },
        }"

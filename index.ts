@@ -3,6 +3,7 @@ import type {
   IAdminForth,
   IHttpServer,
 } from "adminforth";
+import clone from 'clone';
 
 import { AdminForthPlugin, AdminForthResourcePages, suggestIfTypo } from "adminforth";
 import { PluginOptions } from "./types.js";
@@ -33,7 +34,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           return { error: `Resource ${this.options.foreignResourceId} not found` };
         }
         // exclude "plugins" key
-        const resourceCopy = JSON.parse(JSON.stringify({ ...resource, plugins: undefined }));
+        const resourceCopy = clone({ ...resource, plugins: undefined });
 
         if (this.options.modifyTableResourceConfig) {
           this.options.modifyTableResourceConfig(resourceCopy);
