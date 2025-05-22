@@ -191,12 +191,21 @@ const endFilters = computed(() => {
     }), 10000);
     return [];
   }
+
+  let primaryKeyValue = null;
+  if (primaryKeyColumn.foreignResource) {
+    primaryKeyColumn = props.record[primaryKeyColumn.name].value;
+  } else {
+    primaryKeyValue = props.record[primaryKeyColumn.name];
+  }
+
+
   return [
     ...filters.value,
     {
       field: refColumn.name,
       operator: 'eq',
-      value: props.record[primaryKeyColumn.name],
+      value: primaryKeyValue,
     },
   ];
 });
