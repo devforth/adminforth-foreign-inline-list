@@ -194,7 +194,7 @@ const endFilters = computed(() => {
 
   let primaryKeyValue = null;
   if (primaryKeyColumn.foreignResource) {
-    primaryKeyColumn = props.record[primaryKeyColumn.name].value;
+    primaryKeyValue = props.record[primaryKeyColumn.name].value;
   } else {
     primaryKeyValue = props.record[primaryKeyColumn.name];
   }
