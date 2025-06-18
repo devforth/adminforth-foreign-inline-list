@@ -309,6 +309,9 @@ async function getList() {
 
 onMounted( async () => {
   loading.value = true;
+  if (props.meta?.defaultSort && sort.value.length === 0) {
+    sort.value = [props.meta.defaultSort];
+  }
   const foreighResourceId = props.meta.foreignResourceId;
   listResource.value = (await callAdminForthApi({
       path: `/plugin/${props.meta.pluginInstanceId}/get_resource`,

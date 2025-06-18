@@ -111,7 +111,12 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
+    
+    if (this.options.modifyTableResourceConfig) {
+      this.options.modifyTableResourceConfig(this.foreignResource);
+    }
 
+    const defaultSort = this.foreignResource.options?.defaultSort;
     const newColumn = {
       name: `foreignInlineList_${this.foreignResource.resourceId}`,
       label: 'Foreign Inline List',
@@ -128,7 +133,16 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           file: this.componentPath('InlineList.vue'),
           meta: {
             ...this.options, 
-            pluginInstanceId: this.pluginInstanceId
+            pluginInstanceId: this.pluginInstanceId,
+            ...(defaultSort
+              ? {
+                  defaultSort: {
+                    field: defaultSort.columnName,
+                    direction: defaultSort.direction,
+                  }
+                }
+              : {}
+            )
           }
         }
       },
