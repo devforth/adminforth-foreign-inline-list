@@ -110,6 +110,7 @@
       @update:checkboxes="checkboxes = $event"
       @update:records="getList"
 
+      :sort="sort"
       :pageSize="pageSize"
       :totalRows="totalRows"
       :checkboxes="checkboxes"
