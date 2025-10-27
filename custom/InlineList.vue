@@ -74,8 +74,8 @@
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
           query: { 
-            values: encodeURIComponent(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
-            readonlyColumns: encodeURIComponent(JSON.stringify([listResourceRefColumn.name])),
+            values: (JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
+            readonlyColumns: (JSON.stringify([listResourceRefColumn.name])),
             returnTo: $route.fullPath,
           },
        }"
