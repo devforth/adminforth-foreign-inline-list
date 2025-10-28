@@ -74,8 +74,8 @@
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
           query: { 
-            values: encodeQueryJSON(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
-            readonlyColumns: encodeQueryJSON(JSON.stringify([listResourceRefColumn.name])),
+            values: save_btoa(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
+            readonlyColumns: save_btoa(JSON.stringify([listResourceRefColumn.name])),
             returnTo: $route.fullPath,
           },
        }"
@@ -131,7 +131,7 @@ import {
   IconPlusOutline,
 } from '@iconify-prerendered/vue-flowbite';
 import { showErrorTost, showWarningTost } from '@/composables/useFrontendApi';
-import { getIcon, encodeQueryJSON } from '@/utils';
+import { getIcon } from '@/utils';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -335,5 +335,9 @@ onMounted( async () => {
   await getList();
 
 });
+
+function save_btoa(str) {
+  return btoa(str);
+}
 
 </script>
