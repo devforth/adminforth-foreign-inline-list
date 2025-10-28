@@ -74,8 +74,8 @@
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
           query: { 
-            values: (JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
-            readonlyColumns: (JSON.stringify([listResourceRefColumn.name])),
+            values: encodeQueryJSON(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
+            readonlyColumns: encodeQueryJSON(JSON.stringify([listResourceRefColumn.name])),
             returnTo: $route.fullPath,
           },
        }"
@@ -131,7 +131,7 @@ import {
   IconPlusOutline,
 } from '@iconify-prerendered/vue-flowbite';
 import { showErrorTost, showWarningTost } from '@/composables/useFrontendApi';
-import { getIcon } from '@/utils';
+import { getIcon, encodeQueryJSON } from '@/utils';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
