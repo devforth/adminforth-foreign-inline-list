@@ -336,8 +336,5 @@ onMounted( async () => {
 
 });
 
-function save_btoa(str) {
-  return btoa(str);
-}
 
 </script>
