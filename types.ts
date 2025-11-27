@@ -1,5 +1,6 @@
 
-import { AdminForthResource, FilterParams } from 'adminforth';
+import { AdminForthResource } from 'adminforth';
+import type { FilterParams } from 'adminforth';
 
 export type PluginOptions = {
 
