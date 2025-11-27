@@ -169,7 +169,7 @@ const selfPrimaryKeyColumn = computed(() => {
 });
 
 const filterableColumns = computed(() => {
-  if (!listResource.value) {
+  if (!listResource.value || !listResourceRefColumn.value) {
     return [];
   }
 
@@ -288,6 +288,9 @@ async function startBulkAction(actionId) {
 
 async function getList() {
   rows.value = null;
+  if( !listResource.value ){
+    return;
+  }
   const data = await callAdminForthApi({
     path: '/get_resource_data',
     method: 'POST',
