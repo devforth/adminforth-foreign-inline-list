@@ -32,4 +32,6 @@ export type PluginOptions = {
   };
 
   defaultFilters?: (record: any) => FilterParams[];
+  
+  disableForeignListResourceRefColumn?: boolean;
 }

@@ -150,6 +150,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
             defaultFiltersOn: this.options.defaultFilters ? true : false,
             ...this.options, 
             pluginInstanceId: this.pluginInstanceId,
+            disableForeignListResourceRefColumn: this.options.disableForeignListResourceRefColumn,
             ...(defaultSort
               ? {
                   defaultSort: {

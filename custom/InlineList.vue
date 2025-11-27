@@ -182,6 +182,12 @@ const endFilters = computed(() => {
   if (!listResource.value) {
     return [];
   }
+  if (props.meta.disableForeignListResourceRefColumn) {
+    return [
+      ...defaultFilters.value,
+      ...filters.value,
+    ];
+  }
   // get name of the column that is foreign key
   const refColumn = listResourceRefColumn.value;
 
