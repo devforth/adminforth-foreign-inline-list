@@ -54,7 +54,7 @@
     ]
   },
   "dependencies": {
-    "adminforth": "^2.4.0-next.331",
+    "adminforth": "^2.4.0-next.332",
     "clone": "^2.1.2"
   }
 }
