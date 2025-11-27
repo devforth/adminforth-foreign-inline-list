@@ -310,9 +310,12 @@ async function getList() {
     totalRows.value = 0;
     return;
   }
+  console.log('data', data.data);
 
   rows.value = data.data?.map(row => {
+    console.log('row', row);
     row._primaryKeyValue = row[listResource.value.columns.find(c => c.primaryKey).name];
+    console.log('row after pk', row);
     return row;
   });
   totalRows.value = data.total;
