@@ -153,6 +153,8 @@ const filters = ref([]);
 const filtersShow = ref(false);
 const columnsMinMax = ref(null);
 
+const defaultFilters = ref([]);
+
 const listResourceRefColumn = computed(() => {
   if (!listResource.value) {
     return null;
@@ -202,6 +204,7 @@ const endFilters = computed(() => {
 
 
   return [
+    ...defaultFilters.value,
     ...filters.value,
     {
       field: refColumn.name,
@@ -308,6 +311,21 @@ async function getList() {
   await nextTick();
 }
 
+async function getDefaultFilters() {
+  const data = await callAdminForthApi({
+    path: `/plugin/${props.meta.pluginInstanceId}/get_default_filters`,
+    method: 'POST',
+    body: {
+      record: props.record,
+    },
+  });
+  if (data.ok) {
+    defaultFilters.value = data.filters;
+  } else {
+    showErrorTost(data.error);
+  }
+}
+
 onMounted( async () => {
   loading.value = true;
   if (props.meta?.defaultSort && sort.value.length === 0) {
@@ -332,6 +350,9 @@ onMounted( async () => {
     }
   });
   loading.value = false;
+  if (props.meta.defaultFiltersOn) {
+    await getDefaultFilters();
+  }
   await getList();
 
 });

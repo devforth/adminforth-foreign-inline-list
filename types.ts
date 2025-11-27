@@ -1,5 +1,5 @@
 
-import { AdminForthResource } from 'adminforth';
+import { AdminForthResource, FilterParams } from 'adminforth';
 
 export type PluginOptions = {
 
@@ -29,4 +29,6 @@ export type PluginOptions = {
     name: string;
     position: number;
   };
+
+  defaultFilters?: (record: any) => FilterParams[];
 }

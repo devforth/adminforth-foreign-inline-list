@@ -99,6 +99,24 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           }
       }
     })
+    server.endpoint({
+      method: 'POST',
+      path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
+      handler: async ({body}) => {
+        if (!this.options.defaultFilters) {
+          return { error: 'No default filters function defined', ok: false };
+        }
+        const record = body.record;
+        if (!record) {
+          return { error: 'No record provided in request body', ok: false };
+        }
+        const filters = this.options.defaultFilters(record);
+        if (!Array.isArray(filters)) {
+          throw new Error('defauiltFilters must return an array of FilterParams');
+        }
+        return {ok: true, filters};
+      }
+    })
   }
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
@@ -112,9 +130,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
     
-    if (this.options.modifyTableResourceConfig) {
-      this.options.modifyTableResourceConfig(this.foreignResource);
-    }
 
     const defaultSort = this.foreignResource.options?.defaultSort;
     const newColumn = {
@@ -132,6 +147,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
         showRow: { 
           file: this.componentPath('InlineList.vue'),
           meta: {
+            defaultFiltersOn: this.options.defaultFilters ? true : false,
             ...this.options, 
             pluginInstanceId: this.pluginInstanceId,
             ...(defaultSort
