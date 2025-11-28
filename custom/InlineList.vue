@@ -73,7 +73,9 @@
         :to="{ 
           name: 'resource-create', 
           params: { resourceId: listResource.resourceId }, 
-          query: { 
+          query: meta.disableForeignListResourceRefColumn ? {
+            returnTo: $route.fullPath,
+          } : {
             values: btoa_function(JSON.stringify({[listResourceRefColumn.name]: props.record[selfPrimaryKeyColumn.name]})),
             readonlyColumns: btoa_function(JSON.stringify([listResourceRefColumn.name])),
             returnTo: $route.fullPath,
@@ -156,7 +158,7 @@ const columnsMinMax = ref(null);
 const defaultFilters = ref([]);
 
 const listResourceRefColumn = computed(() => {
-  if (!listResource.value) {
+  if (!listResource.value || props.meta.disableForeignListResourceRefColumn) {
     return null;
   }
   return listResource.value.columns.find(c => c.foreignResource?.polymorphicResources
@@ -169,8 +171,12 @@ const selfPrimaryKeyColumn = computed(() => {
 });
 
 const filterableColumns = computed(() => {
-  if (!listResource.value || !listResourceRefColumn.value) {
+  if (!listResource.value) {
     return [];
+  }
+
+  if (props.meta.disableForeignListResourceRefColumn) {
+    return listResource.value.columns.filter((c) => c.showIn.filter === true);
   }
 
   const refColumn = listResourceRefColumn.value;
@@ -310,12 +316,9 @@ async function getList() {
     totalRows.value = 0;
     return;
   }
-  console.log('data', data.data);
 
   rows.value = data.data?.map(row => {
-    console.log('row', row);
     row._primaryKeyValue = row[listResource.value.columns.find(c => c.primaryKey).name];
-    console.log('row after pk', row);
     return row;
   });
   totalRows.value = data.total;
