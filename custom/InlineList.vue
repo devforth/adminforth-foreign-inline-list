@@ -101,6 +101,16 @@
           </span>
       </button>
 
+        <ThreeDotsMenu
+          v-if="listResourceData"
+          :threeDotsDropdownItems="listResourceData?.options?.pageInjections?.list?.threeDotsDropdownItems"
+          :bulkActions="listResourceData?.bulkActions"
+          :checkboxes="checkboxes"
+          @startBulkAction="startBulkAction"
+          :updateList="getList"
+          :clearCheckboxes="clearCheckboxes"
+        ></ThreeDotsMenu>
+
     </div>
 
     <ResourceListTable
@@ -135,6 +145,12 @@ import {
 import { showErrorTost, showWarningTost } from '@/composables/useFrontendApi';
 import { getIcon, btoa_function } from '@/utils';
 import { useI18n } from 'vue-i18n';
+import ThreeDotsMenu from '@/components/ThreeDotsMenu.vue';
+import { useFiltersStore } from '@/stores/filters';
+
+const filtersStore = useFiltersStore();
+
+const listResourceData = ref(null);
 
 const { t } = useI18n();
 
@@ -316,7 +332,7 @@ async function getList() {
     totalRows.value = 0;
     return;
   }
-
+  listResourceData.value = data;
   rows.value = data.data?.map(row => {
     row._primaryKeyValue = row[listResource.value.columns.find(c => c.primaryKey).name];
     return row;
@@ -368,9 +384,14 @@ onMounted( async () => {
   if (props.meta.defaultFiltersOn) {
     await getDefaultFilters();
   }
+  
   await getList();
-
+  filtersStore.setFilters(endFilters.value);
 });
+
+function clearCheckboxes() {
+  checkboxes.value = [];
+}
 
 
 </script>
