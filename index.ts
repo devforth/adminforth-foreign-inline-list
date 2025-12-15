@@ -11,6 +11,7 @@ import { interpretResource, ActionCheckSource } from "adminforth";
 
 export default class ForeignInlineListPlugin extends AdminForthPlugin {
   foreignResource: AdminForthResource;
+  copyOfForeignResource: AdminForthResource;
   options: PluginOptions;
   adminforth: IAdminForth;
 
@@ -29,76 +30,19 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_resource`,
       handler: async ({ body, adminUser }) => {
-        const resource = this.adminforth.config.resources.find((res) => this.options.foreignResourceId === res.resourceId);
-        if (!resource) {
-          return { error: `Resource ${this.options.foreignResourceId} not found` };
-        }
-        // exclude "plugins" key
-        const resourceCopy = clone({ ...resource, plugins: undefined });
-
-        if (this.options.modifyTableResourceConfig) {
-          this.options.modifyTableResourceConfig(resourceCopy);
-        }
-
-        const { allowedActions } = await interpretResource(adminUser, resourceCopy, {}, ActionCheckSource.DisplayButtons, this.adminforth);
+        const { allowedActions } = await interpretResource(adminUser, this.copyOfForeignResource, {}, ActionCheckSource.DisplayButtons, this.adminforth);
 
         return { 
           resource: { 
-            ...resourceCopy,
+            ...this.copyOfForeignResource,
             options: {
-              ...resourceCopy.options,
+              ...this.copyOfForeignResource.options,
               allowedActions,
             },
           }
         };
       }
     });
-    server.endpoint({
-      method: 'POST',
-      path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
-      handler: async ({ body, adminUser, tr }) => {
-          const { resourceId, actionId, recordIds } = body;
-          const resource = this.adminforth.config.resources.find((res) => res.resourceId == resourceId);
-          if (!resource) {
-              return { error: await tr(`Resource {resourceId} not found`, 'errors', { resourceId }) };
-          }
-
-          const resourceCopy = JSON.parse(JSON.stringify({ ...resource, plugins: undefined }));
-
-
-          if (this.options.modifyTableResourceConfig) {
-            this.options.modifyTableResourceConfig(resourceCopy);
-          }
-          
-          const { allowedActions } = await interpretResource(
-            adminUser, 
-            resourceCopy, 
-            { requestBody: body },
-            ActionCheckSource.BulkActionRequest,
-            this.adminforth
-          );
-
-          const action = resourceCopy.options.bulkActions.find((act) => act.id == actionId);
-          if (!action) {
-            return { error: await tr(`Action {actionId} not found`, 'errors', { actionId }) };
-          } 
-          
-          if (action.allowed) {
-            const execAllowed = await action.allowed({ adminUser, resourceCopy, selectedIds: recordIds, allowedActions });
-            if (!execAllowed) {
-              return { error: await tr(`Action "{actionId}" not allowed`, 'errors', { actionId: action.label }) };
-            }
-          }
-          const response = await action.action({selectedIds: recordIds, adminUser, resourceCopy, tr});
-          
-          return {
-            actionId,
-            recordIds,
-            resourceId,
-            ...response
-          }
-      }
-    })
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
@@ -125,6 +69,16 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
 
     // get resource with foreignResourceId
     this.foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
+    this.copyOfForeignResource = clone({ ...this.foreignResource });
+    const idOfNewCopy = `${this.foreignResource.resourceId}_inline_list_copy_${this.pluginInstanceId}`;
+    this.copyOfForeignResource.resourceId = idOfNewCopy;
+    adminforth.config.resources.push(this.copyOfForeignResource);
+
+    if (this.options.modifyTableResourceConfig) {
+      this.options.modifyTableResourceConfig(this.copyOfForeignResource);
+    }
+
+
     if (!this.foreignResource) {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
