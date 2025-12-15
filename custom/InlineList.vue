@@ -282,7 +282,7 @@ async function startBulkAction(actionId) {
   bulkActionLoadingStates.value[actionId] = true;
 
   const data = await callAdminForthApi({
-    path: `/plugin/${props.meta.pluginInstanceId}/start_bulk_action`,
+    path: `/plugin/start_bulk_action`,
     method: 'POST',
     body: {
       resourceId: listResource.value.resourceId,
