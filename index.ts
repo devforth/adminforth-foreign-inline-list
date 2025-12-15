@@ -69,7 +69,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
 
     // get resource with foreignResourceId
     this.foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
-    this.copyOfForeignResource = clone({ ...this.foreignResource });
+    this.copyOfForeignResource = clone({ ...this.foreignResource, plugins: undefined });
     const idOfNewCopy = `${this.foreignResource.resourceId}_inline_list_copy_${this.pluginInstanceId}`;
     this.copyOfForeignResource.resourceId = idOfNewCopy;
     adminforth.config.resources.push(this.copyOfForeignResource);
