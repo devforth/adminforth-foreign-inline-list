@@ -364,9 +364,11 @@ onMounted( async () => {
   }
   const foreighResourceId = props.meta.foreignResourceId;
   listResource.value = (await callAdminForthApi({
-      path: `/plugin/${props.meta.pluginInstanceId}/get_resource`,
+      path: `/get_resource`,
       method: 'POST',
-      body: {},
+      body: {
+        resourceId: foreighResourceId,
+      },
   })).resource;
 
   if (listResource.value?.options?.allowedActions?.create && listResourceRefColumn.value && !listResourceRefColumn.value.showIn.create) {
