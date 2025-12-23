@@ -177,6 +177,7 @@ const listResourceRefColumn = computed(() => {
   if (!listResource.value || props.meta.disableForeignListResourceRefColumn) {
     return null;
   }
+  console.log("Finding ref column in listResource", listResource.value.resourceId, "for resource", props.resource.resourceId, "in", listResource.value);
   return listResource.value.columns.find(c => c.foreignResource?.polymorphicResources
     ? c.foreignResource.polymorphicResources.find((pr) => pr.resourceId === props.resource.resourceId)
     : c.foreignResource?.resourceId === props.resource.resourceId);

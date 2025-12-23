@@ -27,7 +27,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
   }
 
   setupEndpoints(server: IHttpServer) {
-    console.log("Setting up endpoints for plugin", this.pluginInstanceId);
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
@@ -50,6 +49,8 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
     super.modifyResourceConfig(adminforth, resourceConfig);
+    console.log("Modifying resource config for ForeignInlineListPlugin", this.resourceConfig.resourceId);
+
     this.adminforth = adminforth;
     this.foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
 
@@ -152,8 +153,21 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     for (const plugin of this.foreignResource.plugins || []) {
       const options = plugin.pluginOptions;
       // call constructor
-      const pluginCopy = new (plugin.constructor as any)(options);
-      this.copyOfForeignResource.plugins.push(pluginCopy);
+      if ( plugin.constructor.name === 'ForeignInlineListPlugin' ) {
+
+        if (plugin.pluginOptions.foreignResourceId === this.foreignResource.resourceId && !this.resourceConfig.resourceId.includes('_inline_list__from_')) {
+          console.log("Found nested ForeignInlineListPlugin");
+          plugin.pluginOptions.foreignResourceId = idOfNewCopy;
+          const pluginCopy = new (plugin.constructor as any)(options);
+          this.copyOfForeignResource.plugins.push(pluginCopy);
+        } else if (plugin.pluginOptions.foreignResourceId === this.copyOfForeignResource.resourceId && this.resourceConfig.resourceId.includes('_inline_list__from_')) {
+          console.log("Adjusting nested ForeignInlineListPlugin foreignResourceId");
+          break;
+        } 
+      } else {
+        const pluginCopy = new (plugin.constructor as any)(options);
+        this.copyOfForeignResource.plugins.push(pluginCopy);
+      }
     }
 
     // activate plugins for the copyOfForeignResource
