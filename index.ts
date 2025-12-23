@@ -129,6 +129,10 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
+    if (this.foreignResource.resourceId === resourceConfig.resourceId) {
+      throw new Error(`TEMPORARY ERROR ForeignInlineListPlugin: foreignResourceId "${this.options.foreignResourceId}" cannot be the same as the resource where the plugin is installed ("${resourceConfig.resourceId}")`);
+    }
+    const idOfNewCopy = `${this.foreignResource.resourceId}_inline_list__from_${this.resourceConfig.resourceId}__`;
     
 
     const defaultSort = this.foreignResource.options?.defaultSort;
@@ -202,5 +206,56 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     } else {
       resourceConfig.columns.push(newColumn);
     }
+
+    // get resource with foreignResourceId
+    console.log('Creating copy of foreign resource', this.foreignResource.resourceId, 'as', idOfNewCopy);
+    this.copyOfForeignResource = clone({ ...this.foreignResource, plugins: [] });
+
+    // if we install on plugin which is already a copy, adjust foreignResource references
+    if (this.resourceConfig.resourceId.includes('_inline_list__from_')) {
+      const originalResourceIdPart = this.resourceConfig.resourceId.split('_inline_list__from_')[0];
+      // find column in copied resource which is foreignResource.resourceId equal to originalResourceIdPart
+      // and change it to point to this.resourceConfig.resourceId
+      const foreignRefColumn = this.copyOfForeignResource.columns.find(col => col.foreignResource?.resourceId === originalResourceIdPart);
+      if (foreignRefColumn) {
+        foreignRefColumn.foreignResource.resourceId = this.resourceConfig.resourceId;
+      }
+    }
+
+    // if foreignInlineList_ column already created, remove it
+    this.copyOfForeignResource.columns = this.copyOfForeignResource.columns.filter(col => !col.name.startsWith('foreignInlineList_'));
+    // we should not cate about modifications made by other plugins, while activationOrder of this plugin is very low (negative)
+
+    this.copyOfForeignResource.resourceId = idOfNewCopy;
+    adminforth.config.resources.push(this.copyOfForeignResource);
+
+    if (this.options.modifyTableResourceConfig) {
+      this.options.modifyTableResourceConfig(this.copyOfForeignResource);
+    }
+
+    // now we need to create a copy of all plugins of foreignResource,
+    for (const plugin of this.foreignResource.plugins || []) {
+      const options = plugin.pluginOptions;
+      // call constructor
+      const pluginCopy = new (plugin.constructor as any)(options);
+      this.copyOfForeignResource.plugins.push(pluginCopy);
+    }
+
+    // activate plugins for the copyOfForeignResource
+    for (const plugin of this.copyOfForeignResource.plugins.sort((a, b) => a.activationOrder - b.activationOrder)) {
+      // if there already is a plugin with same instanceUniqueRepresentation, skip
+      if (plugin.modifyResourceConfig) {
+        await plugin.modifyResourceConfig(adminforth, this.copyOfForeignResource);
+      }
+      console.log(`🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮Activating plugin ${plugin.pluginInstanceId} for resource ${this.copyOfForeignResource.resourceId}`);
+      if (plugin.setupEndpoints) {
+        await plugin.setupEndpoints(adminforth.express);
+      }
+      if (plugin.validateConfigAfterDiscover) {
+        await plugin.validateConfigAfterDiscover(adminforth, this.copyOfForeignResource);
+      }
+    }
+
+
   }
 }
