@@ -57,6 +57,9 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
+    if (this.foreignResource.resourceId === resourceConfig.resourceId) {
+      throw new Error(`TEMPORARY ERROR ForeignInlineListPlugin: foreignResourceId "${this.options.foreignResourceId}" cannot be the same as the resource where the plugin is installed ("${resourceConfig.resourceId}")`);
+    }
     const idOfNewCopy = `${this.foreignResource.resourceId}_inline_list__from_${this.resourceConfig.resourceId}__`;
     
 
@@ -124,6 +127,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     }
 
     // get resource with foreignResourceId
+    console.log('Creating copy of foreign resource', this.foreignResource.resourceId, 'as', idOfNewCopy);
     this.copyOfForeignResource = clone({ ...this.foreignResource, plugins: [] });
 
     // if we install on plugin which is already a copy, adjust foreignResource references
@@ -162,6 +166,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       if (plugin.modifyResourceConfig) {
         await plugin.modifyResourceConfig(adminforth, this.copyOfForeignResource);
       }
+      console.log(`🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮🤮Activating plugin ${plugin.pluginInstanceId} for resource ${this.copyOfForeignResource.resourceId}`);
       if (plugin.setupEndpoints) {
         await plugin.setupEndpoints(adminforth.express);
       }
