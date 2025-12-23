@@ -27,7 +27,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
   }
 
   setupEndpoints(server: IHttpServer) {
-    console.log("Setting up endpoints for plugin", this.pluginInstanceId);
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
@@ -161,12 +160,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       // if there already is a plugin with same instanceUniqueRepresentation, skip
       if (plugin.modifyResourceConfig) {
         await plugin.modifyResourceConfig(adminforth, this.copyOfForeignResource);
-      }
-      if (plugin.setupEndpoints) {
-        await plugin.setupEndpoints(adminforth.express);
-      }
-      if (plugin.validateConfigAfterDiscover) {
-        await plugin.validateConfigAfterDiscover(adminforth, this.copyOfForeignResource);
       }
     }
 
