@@ -49,7 +49,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
 
   async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
     super.modifyResourceConfig(adminforth, resourceConfig);
-    console.log("Modifying resource config for ForeignInlineListPlugin", this.resourceConfig.resourceId);
 
     this.adminforth = adminforth;
     this.foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
@@ -149,6 +148,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       this.options.modifyTableResourceConfig(this.copyOfForeignResource);
     }
 
+    let shouldRefColumnBeUpdated = false;
     // now we need to create a copy of all plugins of foreignResource,
     for (const plugin of this.foreignResource.plugins || []) {
       const options = plugin.pluginOptions;
@@ -156,14 +156,19 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       if ( plugin.constructor.name === 'ForeignInlineListPlugin' ) {
 
         if (plugin.pluginOptions.foreignResourceId === this.foreignResource.resourceId && !this.resourceConfig.resourceId.includes('_inline_list__from_')) {
-          console.log("Found nested ForeignInlineListPlugin");
+          // TODO delete copyOfForeignResource from adminforth.config.resources, because we are don't use this copy anymore
           plugin.pluginOptions.foreignResourceId = idOfNewCopy;
           const pluginCopy = new (plugin.constructor as any)(options);
           this.copyOfForeignResource.plugins.push(pluginCopy);
-        } else if (plugin.pluginOptions.foreignResourceId === this.copyOfForeignResource.resourceId && this.resourceConfig.resourceId.includes('_inline_list__from_')) {
-          console.log("Adjusting nested ForeignInlineListPlugin foreignResourceId");
-          break;
-        } 
+          const currentResourceForeignRefColumn = this.resourceConfig.columns.find(col => col.foreignResource?.resourceId === this.resourceConfig.resourceId);
+          if (currentResourceForeignRefColumn) {
+            currentResourceForeignRefColumn.foreignResource.resourceId = idOfNewCopy;
+          }
+          shouldRefColumnBeUpdated = true;
+        } else if (!plugin.pluginOptions.foreignResourceId.includes('_inline_list__from_')) {
+          const pluginCopy = new (plugin.constructor as any)(options);
+          this.copyOfForeignResource.plugins.push(pluginCopy);
+        }
       } else {
         const pluginCopy = new (plugin.constructor as any)(options);
         this.copyOfForeignResource.plugins.push(pluginCopy);
@@ -179,6 +184,12 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       this.adminforth.activatedPlugins.push(plugin);
     }
 
+    const currentResourceForeignRefColumnWithComponent = this.copyOfForeignResource.columns.find(col => col.name === 'foreignInlineList_' + idOfNewCopy);
+    if (currentResourceForeignRefColumnWithComponent && shouldRefColumnBeUpdated) {
+      // if we are creating a copy for resource, which is refferes to itself, we need to update foreignResourceId in component meta
+      //@ts-ignore
+      currentResourceForeignRefColumnWithComponent.components.showRow.meta.foreignResourceId = this.resourceConfig.resourceId;
+    }
 
   }
 }
