@@ -47,7 +47,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     })
   }
 
-  async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource) {
+  async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource, allPluginInstances?: {pi: AdminForthPlugin, resource: AdminForthResource}[]) {
     super.modifyResourceConfig(adminforth, resourceConfig);
 
     this.adminforth = adminforth;
@@ -178,10 +178,8 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     // activate plugins for the copyOfForeignResource
     for (const plugin of this.copyOfForeignResource.plugins.sort((a, b) => a.activationOrder - b.activationOrder)) {
       // if there already is a plugin with same instanceUniqueRepresentation, skip
-      if (plugin.modifyResourceConfig) {
-        plugin.modifyResourceConfig(adminforth, this.copyOfForeignResource);
-      }
-      this.adminforth.activatedPlugins.push(plugin);
+      process.env.HEAVY_DEBUG && console.log('Activating plugin for foreign inline list copy:', plugin.constructor.name);
+      allPluginInstances.push({pi: plugin, resource: this.copyOfForeignResource});
     }
 
     const currentResourceForeignRefColumnWithComponent = this.copyOfForeignResource.columns.find(col => col.name === 'foreignInlineList_' + idOfNewCopy);
