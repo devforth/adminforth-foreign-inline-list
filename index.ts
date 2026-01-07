@@ -59,6 +59,12 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     }
     const idOfNewCopy = `${this.foreignResource.resourceId}_inline_list__from_${this.resourceConfig.resourceId}__`;
     
+    let foreignResourceIdForColumn;
+    if (this.options.__inlineListParentResourceId && this.options.__inlineListParentResourceId === this.pluginOptions.foreignResourceId && this.resourceConfig.resourceId.includes('_inline_list__from_')) {
+      foreignResourceIdForColumn = this.options.__inlineListParentResourceId;  
+    } else {
+      foreignResourceIdForColumn = idOfNewCopy;
+    }
 
     const newColumn = {
       name: `foreignInlineList_${this.foreignResource.resourceId}`,
@@ -79,7 +85,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
             ...this.options, 
             pluginInstanceId: this.pluginInstanceId,
             disableForeignListResourceRefColumn: this.options.disableForeignListResourceRefColumn,
-            foreignResourceId: idOfNewCopy
+            foreignResourceId: foreignResourceIdForColumn
           }
         }
       },
@@ -151,7 +157,10 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     let shouldRefColumnBeUpdated = false;
     // now we need to create a copy of all plugins of foreignResource,
     for (const plugin of this.foreignResource.plugins || []) {
-      const options = plugin.pluginOptions;
+      const options = {
+        ...plugin.pluginOptions,
+        __inlineListParentResourceId: this.resourceConfig.resourceId,
+      };
       // call constructor
       if ( plugin.constructor.name === 'ForeignInlineListPlugin' ) {
 
@@ -181,13 +190,5 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       process.env.HEAVY_DEBUG && console.log('Activating plugin for foreign inline list copy:', plugin.constructor.name);
       allPluginInstances.push({pi: plugin, resource: this.copyOfForeignResource});
     }
-
-    const currentResourceForeignRefColumnWithComponent = this.copyOfForeignResource.columns.find(col => col.name === 'foreignInlineList_' + idOfNewCopy);
-    if (currentResourceForeignRefColumnWithComponent && shouldRefColumnBeUpdated) {
-      // if we are creating a copy for resource, which is refferes to itself, we need to update foreignResourceId in component meta
-      //@ts-ignore
-      currentResourceForeignRefColumnWithComponent.components.showRow.meta.foreignResourceId = this.resourceConfig.resourceId;
-    }
-
   }
 }
