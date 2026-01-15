@@ -161,7 +161,11 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
         ...plugin.pluginOptions,
         __inlineListParentResourceId: this.resourceConfig.resourceId,
       };
-      // call constructor
+      const pluginsUiqueRep = plugin.instanceUniqueRepresentation(plugin.pluginOptions);
+      if (plugin?.shouldHaveSingleInstancePerWholeApp?.()) {
+        continue;
+      }
+      // call constructo
       if ( plugin.constructor.name === 'ForeignInlineListPlugin' ) {
 
         if (plugin.pluginOptions.foreignResourceId === this.foreignResource.resourceId && !this.resourceConfig.resourceId.includes('_inline_list__from_')) {
