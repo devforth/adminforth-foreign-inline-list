@@ -1,6 +1,7 @@
 import type { 
   AdminForthResource, 
   IAdminForth,
+  IAdminForthPlugin,
   IHttpServer,
 } from "adminforth";
 import clone from 'clone';
@@ -47,7 +48,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     })
   }
 
-  async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource, allPluginInstances?: {pi: AdminForthPlugin, resource: AdminForthResource}[]) {
+  async modifyResourceConfig(adminforth: IAdminForth, resourceConfig: AdminForthResource, allPluginInstances?: {pi: IAdminForthPlugin, resource: AdminForthResource}[]) {
     super.modifyResourceConfig(adminforth, resourceConfig);
 
     this.adminforth = adminforth;
