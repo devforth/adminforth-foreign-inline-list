@@ -130,7 +130,13 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     }
 
     // get resource with foreignResourceId
-    this.copyOfForeignResource = clone({ ...this.foreignResource, plugins: [] });
+    this.copyOfForeignResource = clone(
+      { 
+        ...this.foreignResource,
+        plugins: [],
+      }
+    );
+
 
     // if we install on plugin which is already a copy, adjust foreignResource references
     if (this.resourceConfig.resourceId.includes('_inline_list__from_')) {
@@ -167,9 +173,13 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       }
       // call constructo
       if ( plugin.constructor.name === 'ForeignInlineListPlugin' ) {
-
-        if (plugin.pluginOptions.foreignResourceId === this.foreignResource.resourceId && !this.resourceConfig.resourceId.includes('_inline_list__from_')) {
-          // TODO delete copyOfForeignResource from adminforth.config.resources, because we are don't use this copy anymore
+        if (this.resourceConfig.resourceId === this.foreignResource.resourceId && this.resourceConfig.resourceId !== plugin.pluginOptions.foreignResourceId) {
+          const idOfNewCopy2 = `${plugin.pluginOptions.foreignResourceId}_inline_list__from_${this.resourceConfig.resourceId}__`;
+          const pluginCopy = new (plugin.constructor as any)(options);
+          pluginCopy.pluginOptions.foreignResourceId = idOfNewCopy2;
+          this.copyOfForeignResource.plugins.push(pluginCopy);
+        } else 
+          if (plugin.pluginOptions.foreignResourceId === this.foreignResource.resourceId && !this.resourceConfig.resourceId.includes('_inline_list__from_')) {
           plugin.pluginOptions.foreignResourceId = idOfNewCopy;
           const pluginCopy = new (plugin.constructor as any)(options);
           this.copyOfForeignResource.plugins.push(pluginCopy);
