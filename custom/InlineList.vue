@@ -127,6 +127,9 @@
       :totalRows="totalRows"
       :checkboxes="checkboxes"
       :customActionsInjection="listResource?.options?.pageInjections?.list?.customActionIcons"
+      :tableBodyStartInjection="listResource?.options?.pageInjections?.list?.tableBodyStart"
+      :customActionIconsThreeDotsMenuItems="listResource?.options?.pageInjections?.list?.customActionIconsThreeDotsMenuItems"
+      :tableRowReplaceInjection="listResource?.options?.pageInjections?.list?.tableRowReplace"
     />
 
   </td>
