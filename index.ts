@@ -161,7 +161,6 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       this.options.modifyTableResourceConfig(this.copyOfForeignResource);
     }
 
-    let shouldRefColumnBeUpdated = false;
     // now we need to create a copy of all plugins of foreignResource,
     for (const plugin of this.foreignResource.plugins || []) {
       const options = {
@@ -188,11 +187,16 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           if (currentResourceForeignRefColumn) {
             currentResourceForeignRefColumn.foreignResource.resourceId = idOfNewCopy;
           }
-          shouldRefColumnBeUpdated = true;
         } else if (!plugin.pluginOptions.foreignResourceId.includes('_inline_list__from_')) {
           const pluginCopy = new (plugin.constructor as any)(options);
           this.copyOfForeignResource.plugins.push(pluginCopy);
         }
+      } else if ( plugin.constructor.name === 'ForeignInlineShowPlugin' ) {
+        let pluginCopy = new (plugin.constructor as any)(options);
+        if (this.resourceConfig.resourceId === `${plugin.pluginOptions.foreignResourceId}_inline_list__from_${plugin.pluginOptions.foreignResourceId}__`) {
+          pluginCopy.pluginOptions.foreignResourceId = `${plugin.pluginOptions.foreignResourceId}_inline_list__from_${plugin.pluginOptions.foreignResourceId}__`;
+        }
+        this.copyOfForeignResource.plugins.push(pluginCopy);
       } else {
         const pluginCopy = new (plugin.constructor as any)(options);
         this.copyOfForeignResource.plugins.push(pluginCopy);
