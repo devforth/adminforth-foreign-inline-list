@@ -36,7 +36,7 @@
         v-if="checkboxes.length" 
         v-for="(action,i) in listResource?.options?.bulkActions" 
         :key="action.id"
-        @click="startBulkAction(action.id)"
+        @click="startBulkActionInner(action.id)"
         class="flex gap-1 items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
         :class="{
           'bg-red-100 text-red-800 border-red-400 dark:bg-red-700 dark:text-red-400 dark:border-red-400': action.state==='danger', 
@@ -106,8 +106,8 @@
           :threeDotsDropdownItems="listResourceData?.options?.pageInjections?.list?.threeDotsDropdownItems"
           :bulkActions="listResourceData?.bulkActions"
           :checkboxes="checkboxes"
-          @startBulkAction="startBulkAction"
-          :updateList="getList"
+          @startBulkAction="startBulkActionInner"
+          :updateList="getListInner"
           :clearCheckboxes="clearCheckboxes"
         ></ThreeDotsMenu>
 
@@ -120,7 +120,7 @@
       @update:page="page = $event"
       @update:sort="sort = $event"
       @update:checkboxes="checkboxes = $event"
-      @update:records="getList"
+      @update:records="getListInner"
 
       :sort="sort"
       :pageSize="pageSize"
@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { callAdminForthApi } from '@/utils';
+import { callAdminForthApi, getList, startBulkAction } from '@/utils';
 import { ref, onMounted, watch, computed, nextTick  } from 'vue';
 import ResourceListTable from '@/components/ResourceListTable.vue';
 import Filters from '@/components/Filters.vue';
@@ -257,92 +257,34 @@ const createIsAllowed = computed(() => {
 });
 
 watch([page], async () => {
-  await getList();
+  await getListInner();
 });
 
 watch([sort], async () => {
-  await getList();
+  await getListInner();
 }, {deep: true});
 
 watch([filters], async () => {
   page.value = 1;
   checkboxes.value = [];
-  await getList();
+  await getListInner();
 }, {deep: true});
 
 const bulkActionLoadingStates = ref({});
 
-async function startBulkAction(actionId) {
-  const action = listResource.value.options.bulkActions.find(a => a.id === actionId);
-  if (action.confirm) {
-    const confirmed = await adminforth.confirm({
-      message: action.confirm,
-    });
-    if (!confirmed) {
-      return;
-    }
-  }
-  bulkActionLoadingStates.value[actionId] = true;
-
-  const data = await callAdminForthApi({
-    path: `/plugin/${props.meta.pluginInstanceId}/start_bulk_action`,
-    method: 'POST',
-    body: {
-      resourceId: listResource.value.resourceId,
-      actionId: actionId,
-      recordIds: checkboxes.value
-    }
-  });
-  bulkActionLoadingStates.value[actionId] = false;
-  
-  if (data?.ok) {
-    checkboxes.value = [];
-    await getList();
-
-    if (data.successMessage) {
-      adminforth.alert({
-        message: data.successMessage,
-        variant: 'success'
-      });
-    }
-  }
-  if (data?.error) {
-    showErrorTost(data.error);
-  }
+async function startBulkActionInner(actionId) {
+  await startBulkAction(actionId, listResource.value, checkboxes, bulkActionLoadingStates, getListInner);
 }
 
-async function getList() {
-  rows.value = null;
-  if( !listResource.value ){
-    return;
+async function getListInner() {
+  rows.value = null; // to show loading state
+  const result = await getList(listResource.value, true, page.value, pageSize.value, sort.value, checkboxes, endFilters.value);
+  if (!result) {
+    return { error: 'No result returned from getList' };
   }
-  const data = await callAdminForthApi({
-    path: '/get_resource_data',
-    method: 'POST',
-    body: {
-      source: 'list',
-      resourceId: listResource.value.resourceId,
-      limit: pageSize.value,
-      offset: (page.value - 1) * pageSize.value,
-      filters: endFilters.value,
-      sort: sort.value,
-    }
-  });
-
-  if (data.error) {
-    showErrorTost(data.error);
-    rows.value = [];
-    totalRows.value = 0;
-    return;
-  }
-  listResourceData.value = data;
-  rows.value = data.data?.map(row => {
-    row._primaryKeyValue = row[listResource.value.columns.find(c => c.primaryKey).name];
-    return row;
-  });
-  totalRows.value = data.total;
-
-  await nextTick();
+  rows.value = result.rows;
+  totalRows.value = result.totalRows ?? 0;
+  return { error: result.error };
 }
 
 async function getDefaultFilters() {
@@ -390,7 +332,7 @@ onMounted( async () => {
     await getDefaultFilters();
   }
   
-  await getList();
+  await getListInner();
   filtersStore.setFilters(endFilters.value);
 });
 
