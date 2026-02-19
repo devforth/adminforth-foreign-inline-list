@@ -8,7 +8,6 @@ import clone from 'clone';
 
 import { AdminForthPlugin, AdminForthResourcePages, suggestIfTypo } from "adminforth";
 import { PluginOptions } from "./types.js";
-import { interpretResource, ActionCheckSource } from "adminforth";
 
 export default class ForeignInlineListPlugin extends AdminForthPlugin {
   foreignResource: AdminForthResource;
@@ -197,7 +196,24 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           pluginCopy.pluginOptions.foreignResourceId = `${plugin.pluginOptions.foreignResourceId}_inline_list__from_${plugin.pluginOptions.foreignResourceId}__`;
         }
         this.copyOfForeignResource.plugins.push(pluginCopy);
-      } else {
+      } else if ( plugin.constructor.name === 'UploadPlugin' && plugin.pluginOptions.storageAdapter.constructor.name === 'AdminForthStorageAdapterLocalFilesystem' ) {
+        /**
+         * Since  AdminForthStorageAdapterLocalFilesystem requers unique adminServeBaseUrl for each instance, 
+         * we need to create a copy of the plugin with a new adminServeBaseUrl for each copy of the resource. 
+         */
+        const pluginCopy = new (plugin.constructor as any)(options);
+        if (plugin.pluginOptions.storageAdapter.options?.adminServeBaseUrl ) {
+          const storageAdapterCopy = new (plugin.pluginOptions.storageAdapter.constructor as any)(
+            {
+              ...plugin.pluginOptions.storageAdapter.options, 
+              adminServeBaseUrl: `${plugin.pluginOptions.storageAdapter.options.adminServeBaseUrl}_copy_for_${idOfNewCopy}`
+            }
+          );
+          pluginCopy.pluginOptions.storageAdapter = storageAdapterCopy;
+        }
+        this.copyOfForeignResource.plugins.push(pluginCopy);
+      }
+      else {
         const pluginCopy = new (plugin.constructor as any)(options);
         this.copyOfForeignResource.plugins.push(pluginCopy);
       }
