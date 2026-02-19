@@ -167,7 +167,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
         __inlineListParentResourceId: this.resourceConfig.resourceId,
       };
       const pluginsUiqueRep = plugin.instanceUniqueRepresentation(plugin.pluginOptions);
-      if (plugin?.shouldHaveSingleInstancePerWholeApp?.()) {
+      if (plugin?.shouldHaveSingleInstancePerWholeApp?.() || plugin.constructor.name === 'CaptchaPlugin') {
         continue;
       }
       // call constructo
