@@ -10,8 +10,7 @@
   },
   "homepage": "https://adminforth.dev/docs/tutorial/Plugins/ForeignInlineList/",
   "scripts": {
-    "build": "tsc && rsync -av --exclude 'node_modules' custom dist/",
-    "prepare": "npm link adminforth"
+    "build": "tsc && rsync -av --exclude 'node_modules' custom dist/"
   },
   "repository": {
     "type": "git",
@@ -38,6 +37,7 @@
       [
         "semantic-release-slack-bot",
         {
+          "packageName": "@adminforth/foreign-inline-list",
           "notifyOnSuccess": true,
           "notifyOnFail": true,
           "slackIcon": ":package:",
@@ -57,6 +57,6 @@
     "clone": "^2.1.2"
   },
   "peerDependencies": {
-    "adminforth": "next"
+    "adminforth": "^2.24.0"
   }
 }
