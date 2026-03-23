@@ -63,7 +63,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
               return { error: await tr(`Resource {resourceId} not found`, 'errors', { resourceId }) };
           }
 
-          const resourceCopy = JSON.parse(JSON.stringify({ ...resource, plugins: undefined }));
+          const resourceCopy = clone({ ...resource, plugins: undefined });
 
 
           if (this.options.modifyTableResourceConfig) {
@@ -151,6 +151,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
             ...this.options, 
             pluginInstanceId: this.pluginInstanceId,
             disableForeignListResourceRefColumn: this.options.disableForeignListResourceRefColumn,
+            foreignResourceId: this.options.foreignResourceId,
             ...(defaultSort
               ? {
                   defaultSort: {
