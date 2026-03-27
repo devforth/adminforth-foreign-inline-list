@@ -112,22 +112,23 @@
         ></ThreeDotsMenu>
 
     </div>
+    <div style="display: grid; min-width: 0;">
+      <ResourceListTable
+        :noRoundings="true"
+        :resource="listResource"
+        :rows="rows"
+        @update:page="page = $event"
+        @update:sort="sort = $event"
+        @update:checkboxes="checkboxes = $event"
+        @update:records="getList"
 
-    <ResourceListTable
-      :noRoundings="true"
-      :resource="listResource"
-      :rows="rows"
-      @update:page="page = $event"
-      @update:sort="sort = $event"
-      @update:checkboxes="checkboxes = $event"
-      @update:records="getList"
-
-      :sort="sort"
-      :pageSize="pageSize"
-      :totalRows="totalRows"
-      :checkboxes="checkboxes"
-      :customActionsInjection="listResource?.options?.pageInjections?.list?.customActionIcons"
-    />
+        :sort="sort"
+        :pageSize="pageSize"
+        :totalRows="totalRows"
+        :checkboxes="checkboxes"
+        :customActionsInjection="listResource?.options?.pageInjections?.list?.customActionIcons"
+      />
+    </div>
 
   </td>
 </template>
