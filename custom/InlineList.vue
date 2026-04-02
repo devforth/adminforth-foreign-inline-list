@@ -4,10 +4,10 @@
     <Filters
       v-if="filterableColumns.length"
       :columns="filterableColumns"
-      v-model:filters="filters"
       :columnsMinMax="columnsMinMax"
       :show="filtersShow"
       @hide="filtersShow = false"
+      :filtersStore="filtersStore"
     />
   </Teleport>
     
@@ -81,7 +81,7 @@
             returnTo: $route.fullPath,
           },
        }"
-        class="flex items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 rounded-default gap-1"
+        class="flex h-[34px] af-button-shadow items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 rounded-default gap-1"
       >
         <IconPlusOutline class="w-4 h-4"/>
         {{$t('Create')}}
@@ -89,7 +89,7 @@
 
       <button
         v-if="listResource?.options?.allowedActions?.filter"
-        class="flex gap-1 items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 rounded-default"
+        class="flex gap-1 h-[34px] af-button-shadow items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700 rounded-default"
         @click="()=>{filtersShow = !filtersShow}"
       >
         <IconFilterOutline class="w-4 h-4"/>
@@ -122,10 +122,12 @@
         @update:checkboxes="checkboxes = $event"
         @update:records="getList"
 
+        :page="page"
         :sort="sort"
         :pageSize="pageSize"
         :totalRows="totalRows"
         :checkboxes="checkboxes"
+        :isVirtualScrollEnabled="false"
         :customActionsInjection="listResource?.options?.pageInjections?.list?.customActionIcons"
       />
     </div>
@@ -133,7 +135,7 @@
   </td>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { callAdminForthApi } from '@/utils';
 import { ref, onMounted, watch, computed, nextTick  } from 'vue';
 import ResourceListTable from '@/components/ResourceListTable.vue';
@@ -147,9 +149,11 @@ import { showErrorTost, showWarningTost } from '@/composables/useFrontendApi';
 import { getIcon, btoa_function } from '@/utils';
 import { useI18n } from 'vue-i18n';
 import ThreeDotsMenu from '@/components/ThreeDotsMenu.vue';
-import { useFiltersStore } from '@/stores/filters';
+import type { FilterParams } from '@/types/Common';
+import type { AdminforthFilterStoreUnwrapped, sortType } from '@/spa_types/core';
+import { useAdminforth } from '@/adminforth';
 
-const filtersStore = useFiltersStore();
+const adminforth = useAdminforth();
 
 const listResourceData = ref(null);
 
@@ -168,7 +172,77 @@ const pageSize = computed(() => listResource.value?.options?.listPageSize || 10)
 const rows = ref(null);
 const totalRows = ref(0);
 
-const filters = ref([]);
+// local filters source for the inline list filter store
+const filters = ref<FilterParams[]>([]);
+
+const shouldFilterBeHidden = (fieldName: string): boolean => {
+  if (listResource.value?.columns) {
+    const column = listResource.value.columns.find((col: any) => col.name === fieldName);
+    if (column?.showIn?.filter !== true) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+const filtersStore: AdminforthFilterStoreUnwrapped = {
+  // Expose filters as a getter/setter that directly proxies the local `filters` ref.
+  // This allows usage patterns like `filtersStore.filters = []` and `filtersStore.filters.push(...)`
+  // while keeping reactivity and the ref as the single source of truth.
+  get filters(): FilterParams[] {
+    return filters.value;
+  },
+  set filters(val: FilterParams[]) {
+    filters.value = val;
+  },
+
+  setSort: (s: sortType) => {
+    try {
+      // @ts-ignore - update local `sort` if available
+      if (typeof sort !== 'undefined' && 'value' in sort) sort.value = s as any;
+    } catch (e) {
+    }
+  },
+  getSort: (): sortType => {
+    try {
+      // @ts-ignore
+      return (typeof sort !== 'undefined' && 'value' in sort) ? sort.value as sortType : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  setFilter: (filter: FilterParams) => {
+    filters.value.push(filter);
+  },
+
+  setFilters: (f: FilterParams[]) => {
+    // console.log('Setting filters', f);
+    filters.value = f || [];
+  },
+
+  getFilters: (): FilterParams[] => {
+    return filters.value;
+  },
+
+  clearFilter: (fieldName: string): void => {
+    filters.value = filters.value.filter(f => f.field !== fieldName);
+  },
+
+  clearFilters: (): void => {
+    filters.value = [];
+  },
+
+  shouldFilterBeHidden: (fieldName: string): boolean => {
+    return shouldFilterBeHidden(fieldName);
+  },
+
+  // Unwrapped store expects a plain number here, so we expose it as a getter.
+  get visibleFiltersCount(): number {
+    return filters.value.filter(f => !shouldFilterBeHidden(f.field)).length;
+  },
+};
 const filtersShow = ref(false);
 const columnsMinMax = ref(null);
 
@@ -371,7 +445,7 @@ onMounted( async () => {
   })).resource;
 
   if (listResource.value?.options?.allowedActions?.create && listResourceRefColumn.value && !listResourceRefColumn.value.showIn.create) {
-    showWarningTost(t(`Resource '${listResource.value.resourceId}' column '${listResourceRefColumn.value.name}' should be editable on create page for 'create' action to be enabled`), 10000);
+    showWarningTost(t(`Resource '${listResource.value.resourceId}' column '${listResourceRefColumn.value.name}' should be editable on create page for 'create' action to be enabled`));
   }
   
   columnsMinMax.value = await callAdminForthApi({
@@ -387,7 +461,7 @@ onMounted( async () => {
   }
   
   await getList();
-  filtersStore.setFilters(endFilters.value);
+
 });
 
 function clearCheckboxes() {
