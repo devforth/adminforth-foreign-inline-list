@@ -21,7 +21,7 @@
     "adminforth",
     "list foreign items"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.7",
     "semantic-release": "^24.2.1",
