@@ -1,8 +1,8 @@
 
 import { AdminForthResource } from 'adminforth';
-import type { FilterParams } from 'adminforth';
+import type { FilterParams, PluginsCommonOptions } from 'adminforth';
 
-export type PluginOptions = {
+export interface PluginOptions extends PluginsCommonOptions {
 
   /** 
    * Id of the resource to be displayed in the inline list.
