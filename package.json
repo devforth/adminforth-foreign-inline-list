@@ -8,7 +8,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://adminforth.dev/docs/tutorial/Plugins/ForeignInlineList/",
+  "homepage": "https://adminforth.dev/docs/tutorial/Plugins/foreign-inline-list/",
   "scripts": {
     "build": "tsc && rsync -av --exclude 'node_modules' custom dist/"
   },
@@ -16,7 +16,7 @@
     "type": "git",
     "url": "https://github.com/devforth/adminforth-foreign-inline-list.git"
   },
-  "author": "devforth",
+  "author": "DevForth (https://devforth.io)",
   "keywords": [
     "adminforth",
     "list foreign items"
@@ -24,7 +24,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.10.7",
-    "adminforth": "^2.35.0",
+    "adminforth": "^2.42.0",
     "semantic-release": "^24.2.1",
     "semantic-release-slack-bot": "^4.0.2",
     "typescript": "^5.7.3"
@@ -58,6 +58,6 @@
     "clone": "^2.1.2"
   },
   "peerDependencies": {
-    "adminforth": "^2.35.0"
+    "adminforth": "^2.42.0"
   }
 }
