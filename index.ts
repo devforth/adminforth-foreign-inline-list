@@ -34,13 +34,16 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     schema: z.ZodType<T>,
     body: unknown,
     response: { setStatus: (code: number, message: string) => void },
-  ): T | null {
+  ): { ok: true; data: T } | { ok: false; error: { error: string; details: unknown } } {
     const parsed = schema.safeParse(body ?? {});
     if (!parsed.success) {
-      response.setStatus(422, parsed.error.message);
-      return null;
+      response.setStatus(400, '');
+      return {
+        ok: false,
+        error: { error: 'Request body validation failed', details: parsed.error.issues },
+      };
     }
-    return parsed.data;
+    return { ok: true, data: parsed.data };
   }
 
   instanceUniqueRepresentation(pluginOptions: any) : string {
@@ -81,8 +84,9 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
       handler: async ({ body, adminUser, tr, response: httpResponse }) => {
-          const data = this.parseBody(startBulkActionBodySchema, body, httpResponse);
-          if (!data) return;
+          const parsed = this.parseBody(startBulkActionBodySchema, body, httpResponse);
+          if ('error' in parsed) return parsed.error;
+          const data = parsed.data;
           const { resourceId, actionId, recordIds } = data;
           const resource = this.adminforth.config.resources.find((res) => res.resourceId == resourceId);
           if (!resource) {
@@ -132,8 +136,9 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
         if (!this.options.defaultFilters) {
           return { error: 'No default filters function defined', ok: false };
         }
-        const data = this.parseBody(getDefaultFiltersBodySchema, body, response);
-        if (!data) return;
+        const parsed = this.parseBody(getDefaultFiltersBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
         const record = data.record;
         if (!record) {
           return { error: 'No record provided in request body', ok: false };
