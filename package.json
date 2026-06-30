@@ -55,6 +55,7 @@
     ]
   },
   "dependencies": {
+    "zod": "^4.3.6",
     "clone": "^2.1.2"
   },
   "peerDependencies": {
