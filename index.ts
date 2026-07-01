@@ -5,7 +5,7 @@ import type {
 } from "adminforth";
 import clone from 'clone';
 
-import { AdminForthPlugin, parseBody, AdminForthResourcePages, suggestIfTypo } from "adminforth";
+import { AdminForthPlugin, AdminForthResourcePages, suggestIfTypo } from "adminforth";
 import { PluginOptions } from "./types.js";
 import { interpretResource, ActionCheckSource } from "adminforth";
 import { z } from "zod";
@@ -67,10 +67,9 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
-      handler: async ({ body, adminUser, tr, response: httpResponse }) => {
-          const parsed = parseBody(startBulkActionBodySchema, body, httpResponse);
-          if ('error' in parsed) return parsed.error;
-          const data = parsed.data;
+      request_schema: startBulkActionBodySchema,
+      handler: async ({ body, adminUser, tr }) => {
+          const data = body as z.infer<typeof startBulkActionBodySchema>;
           const { resourceId, actionId, recordIds } = data;
           const resource = this.adminforth.config.resources.find((res) => res.resourceId == resourceId);
           if (!resource) {
@@ -116,13 +115,12 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
-      handler: async ({ body, response }) => {
+      request_schema: getDefaultFiltersBodySchema,
+      handler: async ({ body }) => {
         if (!this.options.defaultFilters) {
           return { error: 'No default filters function defined', ok: false };
         }
-        const parsed = parseBody(getDefaultFiltersBodySchema, body, response);
-        if ('error' in parsed) return parsed.error;
-        const data = parsed.data;
+        const data = body as z.infer<typeof getDefaultFiltersBodySchema>;
         const record = data.record;
         if (!record) {
           return { error: 'No record provided in request body', ok: false };
