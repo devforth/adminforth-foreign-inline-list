@@ -5,9 +5,20 @@ import type {
 } from "adminforth";
 import clone from 'clone';
 
-import { AdminForthPlugin, AdminForthResourcePages, suggestIfTypo } from "adminforth";
+import { AdminForthPlugin, parseBody, AdminForthResourcePages, suggestIfTypo } from "adminforth";
 import { PluginOptions } from "./types.js";
 import { interpretResource, ActionCheckSource } from "adminforth";
+import { z } from "zod";
+
+const startBulkActionBodySchema = z.object({
+  resourceId: z.string(),
+  actionId: z.union([z.string(), z.number()]),
+  recordIds: z.array(z.union([z.string(), z.number()])),
+}).strict();
+
+const getDefaultFiltersBodySchema = z.object({
+  record: z.record(z.string(), z.any()).nullish(),
+}).strict();
 
 export default class ForeignInlineListPlugin extends AdminForthPlugin {
   foreignResource: AdminForthResource;
@@ -56,8 +67,11 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
-      handler: async ({ body, adminUser, tr }) => {
-          const { resourceId, actionId, recordIds } = body;
+      handler: async ({ body, adminUser, tr, response: httpResponse }) => {
+          const parsed = parseBody(startBulkActionBodySchema, body, httpResponse);
+          if ('error' in parsed) return parsed.error;
+          const data = parsed.data;
+          const { resourceId, actionId, recordIds } = data;
           const resource = this.adminforth.config.resources.find((res) => res.resourceId == resourceId);
           if (!resource) {
               return { error: await tr(`Resource {resourceId} not found`, 'errors', { resourceId }) };
@@ -102,11 +116,14 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
-      handler: async ({body}) => {
+      handler: async ({ body, response }) => {
         if (!this.options.defaultFilters) {
           return { error: 'No default filters function defined', ok: false };
         }
-        const record = body.record;
+        const parsed = parseBody(getDefaultFiltersBodySchema, body, response);
+        if ('error' in parsed) return parsed.error;
+        const data = parsed.data;
+        const record = data.record;
         if (!record) {
           return { error: 'No record provided in request body', ok: false };
         }
