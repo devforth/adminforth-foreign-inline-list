@@ -360,7 +360,6 @@ async function startBulkAction(actionId) {
     path: `/plugin/${props.meta.pluginInstanceId}/start_bulk_action`,
     method: 'POST',
     body: {
-      resourceId: listResource.value.resourceId,
       actionId: actionId,
       recordIds: checkboxes.value
     }

@@ -11,7 +11,6 @@ import { interpretResource, ActionCheckSource } from "adminforth";
 import { z } from "zod";
 
 const startBulkActionBodySchema = z.object({
-  resourceId: z.string(),
   actionId: z.union([z.string(), z.number()]),
   recordIds: z.array(z.union([z.string(), z.number()])),
 }).strict();
@@ -70,7 +69,8 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       request_schema: startBulkActionBodySchema,
       handler: async ({ body, adminUser, tr }) => {
           const data = body as z.infer<typeof startBulkActionBodySchema>;
-          const { resourceId, actionId, recordIds } = data;
+          const { actionId, recordIds } = data;
+          const resourceId = this.options.foreignResourceId;
           const resource = this.adminforth.config.resources.find((res) => res.resourceId == resourceId);
           if (!resource) {
               return { error: await tr(`Resource {resourceId} not found`, 'errors', { resourceId }) };
