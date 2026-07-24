@@ -22,7 +22,7 @@
         v-if="checkboxes.length"
         data-tooltip-target="tooltip-remove-all"
         data-tooltip-placement="bottom"
-        class="flex gap-1  items-center py-1 px-3 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+        class="flex gap-1 h-[2.125rem] items-center py-1 px-3 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
       >
         <IconBanOutline class="w-5 h-5 "/>
         <div id="tooltip-remove-all" role="tooltip"
@@ -37,7 +37,7 @@
         v-for="(action,i) in listResource?.options?.bulkActions" 
         :key="action.id"
         @click="startBulkAction(action.id)"
-        class="flex gap-1 items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+        class="flex gap-1 min-h-[2.125rem] items-center py-1 px-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
         :class="{
           'bg-red-100 text-red-800 border-red-400 dark:bg-red-700 dark:text-red-400 dark:border-red-400': action.state==='danger', 
           'bg-green-100 text-green-800 border-green-400 dark:bg-green-700 dark:text-green-400 dark:border-green-400':action.state==='success',
@@ -47,12 +47,12 @@
         <component
           v-if="action.icon && !bulkActionLoadingStates[action.id]"
           :is="getIcon(action.icon)"
-          class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">
+          class="min-w-5 min-h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">
         </component>
         <div v-if="bulkActionLoadingStates[action.id]">
           <svg 
             aria-hidden="true" 
-            class="w-5 h-5 animate-spin" 
+            class="min-w-5 min-h-5 animate-spin" 
             :class="{
               'text-gray-200 dark:text-gray-500 fill-gray-500 dark:fill-gray-300': action.state !== 'danger',
               'text-red-200 dark:text-red-800 fill-red-600 dark:fill-red-500': action.state === 'danger'
@@ -347,9 +347,15 @@ const bulkActionLoadingStates = ref({});
 async function startBulkAction(actionId) {
   const action = listResource.value.options.bulkActions.find(a => a.id === actionId);
   if (action.confirm) {
-    const confirmed = await adminforth.confirm({
-      message: action.confirm,
-    });
+    const confirmed = await adminforth.confirm(
+      typeof action.confirm === 'string'
+        ? { title: action.confirm, dangerous: true }
+        : {
+            ...action.confirm,
+            message: action.confirm.message && t(action.confirm.message, { count: checkboxes.value.length }),
+            dangerous: true,
+          }
+    );
     if (!confirmed) {
       return;
     }
