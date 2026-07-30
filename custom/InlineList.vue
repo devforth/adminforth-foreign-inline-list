@@ -150,6 +150,7 @@ import { getIcon, btoa_function } from '@/utils';
 import { useI18n } from 'vue-i18n';
 import ThreeDotsMenu from '@/components/ThreeDotsMenu.vue';
 import type { FilterParams } from '@/types/Common';
+import { AdminForthFilterOperators } from '@/types/Common';
 import type { AdminforthFilterStoreUnwrapped, sortType } from '@/spa_types/core';
 import { useAdminforth } from '@/adminforth';
 
@@ -304,17 +305,18 @@ const endFilters = computed(() => {
   } else {
     primaryKeyValue = props.record[primaryKeyColumn.name];
   }
-
-
-  return [
+  const toReturn = [
     ...defaultFilters.value,
-    ...filters.value,
-    {
-      field: refColumn.name,
-      operator: 'eq',
-      value: primaryKeyValue,
-    },
+    ...filters.value
   ];
+  if (primaryKeyValue !== null && primaryKeyValue !== undefined) {
+    toReturn.push({
+      field: refColumn.name,
+      operator: AdminForthFilterOperators.EQ,
+      value: primaryKeyValue,
+    });
+  }
+  return toReturn;
 });
 
 const createIsAllowed = computed(() => {
@@ -393,6 +395,7 @@ async function getList() {
   if( !listResource.value ){
     return;
   }
+  console.log('Getting list for resource', 'with filters', endFilters.value, 'and sort', sort.value);
   const data = await callAdminForthApi({
     path: '/get_resource_data',
     method: 'POST',
