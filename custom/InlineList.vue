@@ -20,16 +20,14 @@
       <button
         @click="()=>{checkboxes = []}"
         v-if="checkboxes.length"
-        data-tooltip-target="tooltip-remove-all"
-        data-tooltip-placement="bottom"
         class="flex gap-1 h-[2.125rem] items-center py-1 px-3 me-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-default border border-gray-300 hover:bg-gray-100 hover:text-lightPrimary focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
       >
-        <IconBanOutline class="w-5 h-5 "/>
-        <div id="tooltip-remove-all" role="tooltip"
-             class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-700">
-          {{$t('Remove selection')}}
-          <div class="tooltip-arrow" data-popper-arrow></div>
-        </div>
+        <Tooltip>
+          <IconBanOutline class="w-5 h-5 "/>
+          <template #tooltip>
+            {{$t('Remove selection')}}
+          </template>
+        </Tooltip>
       </button>
 
       <button
@@ -140,6 +138,7 @@ import { callAdminForthApi } from '@/utils';
 import { ref, onMounted, watch, computed, nextTick  } from 'vue';
 import ResourceListTable from '@/components/ResourceListTable.vue';
 import Filters from '@/components/Filters.vue';
+import { Tooltip } from '@/afcl';
 import {
   IconBanOutline,
   IconFilterOutline,
