@@ -67,7 +67,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
       request_schema: startBulkActionBodySchema,
-      handler: async ({ body, adminUser, tr }) => {
+      handler: async ({ body, adminUser, tr, query, headers, cookies, requestUrl, response }) => {
           const data = body as z.infer<typeof startBulkActionBodySchema>;
           const { actionId, recordIds } = data;
           const resourceId = this.options.foreignResourceId;
@@ -97,18 +97,21 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
           } 
           
           if (action.allowed) {
-            const execAllowed = await action.allowed({ adminUser, resourceCopy, selectedIds: recordIds, allowedActions });
+            const execAllowed = await action.allowed({ adminUser, resource: resourceCopy, selectedIds: recordIds, allowedActions });
             if (!execAllowed) {
               return { error: await tr(`Action "{actionId}" not allowed`, 'errors', { actionId: action.label }) };
             }
           }
-          const response = await action.action({selectedIds: recordIds, adminUser, resourceCopy, tr});
-          
+          const bulkActionResponse = await action.action({
+            selectedIds: recordIds, adminUser, resource: resourceCopy, tr,
+            extra: { body, query, headers, cookies, requestUrl, response },
+          });
+
           return {
             actionId,
             recordIds,
             resourceId,
-            ...response
+            ...bulkActionResponse
           }
       }
     })
