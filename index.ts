@@ -66,6 +66,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/start_bulk_action`,
+      agent: { hiddenFromAgents: true },
       request_schema: startBulkActionBodySchema,
       handler: async ({ body, adminUser, tr, query, headers, cookies, requestUrl, response }) => {
           const data = body as z.infer<typeof startBulkActionBodySchema>;
@@ -118,6 +119,7 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     server.endpoint({
       method: 'POST',
       path: `/plugin/${this.pluginInstanceId}/get_default_filters`,
+      agent: { hiddenFromAgents: true },
       request_schema: getDefaultFiltersBodySchema,
       handler: async ({ body }) => {
         if (!this.options.defaultFilters) {
