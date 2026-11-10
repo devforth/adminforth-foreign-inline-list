@@ -20,9 +20,8 @@ const getDefaultFiltersBodySchema = z.object({
 }).strict();
 
 export default class ForeignInlineListPlugin extends AdminForthPlugin {
-  foreignResource: AdminForthResource;
+  foreignResource!: AdminForthResource;
   options: PluginOptions;
-  adminforth: IAdminForth;
 
   constructor(options: PluginOptions) {
     super(options, import.meta.url);
@@ -144,11 +143,12 @@ export default class ForeignInlineListPlugin extends AdminForthPlugin {
     this.adminforth = adminforth;
 
     // get resource with foreignResourceId
-    this.foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
-    if (!this.foreignResource) {
+    const foreignResource = adminforth.config.resources.find((resource) => resource.resourceId === this.options.foreignResourceId);
+    if (!foreignResource) {
       const similar = suggestIfTypo(adminforth.config.resources.map((res) => res.resourceId), this.options.foreignResourceId);
       throw new Error(`ForeignInlineListPlugin: Resource with ID "${this.options.foreignResourceId}" not found. ${similar ? `Did you mean "${similar}"?` : ''}`);
     }
+    this.foreignResource = foreignResource;
     
 
     const defaultSort = this.foreignResource.options?.defaultSort;

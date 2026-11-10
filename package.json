@@ -23,6 +23,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@types/clone": "^2.1.4",
     "@types/node": "^22.10.7",
     "adminforth": "^4.7.3",
     "semantic-release": "^24.2.1",
