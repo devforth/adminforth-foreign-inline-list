@@ -313,6 +313,11 @@ const createIsAllowed = computed(() => {
   if (listResourceRefColumn.value && !listResourceRefColumn.value.showIn.create) {
     return false;
   }
+
+  // a one-to-one child (its primary key is the reference to the parent) can have only one record
+  if (listResourceRefColumn.value?.primaryKey && totalRows.value > 0) {
+    return false;
+  }
   return true;
 });
 
@@ -402,8 +407,11 @@ async function getList() {
     return;
   }
   listResourceData.value = data;
+  const pkColumn = listResource.value.columns.find(c => c.primaryKey);
   rows.value = data.data?.map(row => {
-    row._primaryKeyValue = row[listResource.value.columns.find(c => c.primaryKey).name];
+    // rows of a composite primary key come with a ready record id from the backend,
+    // a single key which is a foreignResource comes as { pk, label }
+    row._primaryKeyValue ??= pkColumn.foreignResource ? row[pkColumn.name].pk : row[pkColumn.name];
     return row;
   });
   totalRows.value = data.total;
