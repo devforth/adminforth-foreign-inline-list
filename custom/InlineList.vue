@@ -54,9 +54,9 @@
       </Button>
 
       <ThreeDotsMenu
-        v-if="listResourceData"
-        :threeDotsDropdownItems="listResourceData?.options?.pageInjections?.list?.threeDotsDropdownItems"
-        :bulkActions="listResourceData?.bulkActions"
+        v-if="listResource"
+        :threeDotsDropdownItems="listResource.options.pageInjections?.list?.threeDotsDropdownItems"
+        :bulkActions="listResource.options.bulkActions"
         :checkboxes="checkboxes"
         @startBulkAction="startBulkAction"
         :updateList="getList"
@@ -141,8 +141,6 @@ import type { AdminforthFilterStoreUnwrapped, sortType } from '@/spa_types/core'
 import { useAdminforth } from '@/adminforth';
 
 const adminforth = useAdminforth();
-
-const listResourceData = ref(null);
 
 const { t } = useI18n();
 
@@ -406,7 +404,6 @@ async function getList() {
     totalRows.value = 0;
     return;
   }
-  listResourceData.value = data;
   const pkColumn = listResource.value.columns.find(c => c.primaryKey);
   rows.value = data.data?.map(row => {
     // rows of a composite primary key come with a ready record id from the backend,
